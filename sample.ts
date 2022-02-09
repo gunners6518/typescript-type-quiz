@@ -88,3 +88,75 @@ function mapFromArray<T, K extends keyof T>(arr: T[], key: K): Map<T[K], T> {
   }
   return result;
 }
+
+// 3-2 Partial
+
+type MyRartial<T> = {
+  [P in keyof T]?: T[P];
+};
+
+// 3-3 イベント
+class EventDischarger<E> {
+  emit<Ev extends keyof E>(eventName: Ev, payload: E[Ev]) {
+    // 省略
+  }
+}
+
+// EventDischarger<E>なのでイベントの型はE
+// 引数で与えられたeventNameに応じて、payloadの型を変えたい → 文字列をリテラル型で取得(Ev)
+// Evがkey、Eがイベント
+// <Ev extends keyof E> でEvはEで定義されていないeventNameを拒否
+// E(イベントから)、Ev(key)を使ってE[Ev](プロパティ)を取得してpayloadの型に
+
+// 3-4 reducer
+
+type Action =
+  | {
+      type: "increment";
+      amount: number;
+    }
+  | {
+      type: "decrement";
+      amount: number;
+    }
+  | {
+      type: "reset";
+      value: number;
+    };
+
+const reducer = (state: number, action: Action) => {
+  switch (action.type) {
+    case "increment":
+      return state + action.amount;
+    case "decrement":
+      return state - action.amount;
+    case "reset":
+      return action.value;
+  }
+};
+
+// 今回はアクションが「increment,decrement,reset」と決め打ちだった為、ユニオン型で定義
+// reducerあるあるっぽい
+
+// 3-5 undefinedな引数
+
+type Func<A, R> = undefined extends A ? (arg?: A) => R : (arg: A) => R;
+
+// 使用例
+const f1: Func<number, number> = (num) => num + 10;
+const v1: number = f1(10);
+
+const f2: Func<undefined, number> = () => 0;
+const v2: number = f2();
+const v3: number = f2(undefined);
+
+const f3: Func<number | undefined, number> = (num) => (num || 0) + 10;
+const v4: number = f3(123);
+const v5: number = f3();
+
+// 条件によって型を変えたい場合はconditional type
+// 型Aがundefinedかどうかで型を変えたい
+// undefined extends A(Aの部分型としてundefinedがある => Aがundefined！)
+// Aがundefinedなら (arg?:A) => R 引数を省略可能にする
+// Aがundefinedじゃないなら (arg:A) => R 引数を必須にする
+// 要するにAがundefinedかどうかで、引数のオプショナルを変化させている
