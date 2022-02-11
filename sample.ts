@@ -160,3 +160,51 @@ const v5: number = f3();
 // Aがundefinedなら (arg?:A) => R 引数を省略可能にする
 // Aがundefinedじゃないなら (arg:A) => R 引数を必須にする
 // 要するにAがundefinedかどうかで、引数のオプショナルを変化させている
+
+// 4-1 ない場合はunknown
+
+// 引数のオブジェクトのfooプロパティーを返す(fooの型)
+// fooプロパティを持たない引数なら戻り値はunknown型
+
+// オブジェクトの型をT。<T extend object>としてobject型固定
+//  inferを使う典型！！→ cnditional typeでさらに型変数を導入できる
+// fooがあればfooの型、なければunknownなので→ {foo : infer E}? E :unknownとする
+
+function getFoo<T extends object>(
+  obj: T extends { foo: infer E } ? E : unknown
+) {
+  return (obj as any).foo;
+}
+
+// fooがあれば戻り値はfooの型、なけれなunknownとするオブジェクトTの型
+// fooの型をinferで定義
+//  T extends { foo: infer E } ? E : unknown
+
+// 4-2　プロパティを上書きする関数
+
+// giveId2はオブジェクトにid:stringを代入して返す関数
+// idが既にある場合も考える。その場合は上書き
+
+// Pickを使う。→　Pick<T,K>は「オブジェクトTのうち、kのプロパティを含むオブジェクトだけ返す」
+// 例) Pick<{foo:"string",bar:number},foo>　→　{foo:string}
+
+// Excludeを使う。→　Excliude<U,T>  Tがユニオン型の時、Tの構成要素のうち、Uの部分型を除いた型。
+// 要するにTからUだけ省く
+
+// 今回の考え方
+// idを上書きする為に、一旦Tからid以外の構成要素の型を取る
+// Pick<T , Exclude<keyof T,id >>
+
+// これに インターセクション型でid:stringを足す
+// xx & {id:string}
+
+// ちなみにPick + Excludeはよく使うので、Omitと呼んだりもするらしい。
+type Omit<T, K extends keyof T> = Pick<T, Exclude<keyof T, K>>;
+
+function giveId2<T>(obj: T): Pick<T, Exclude<keyof T, "id">> & { id: string } {
+  const id = "本当はランダムがいいけどここではただの文字列";
+  return {
+    ...obj,
+    id,
+  };
+}
