@@ -208,3 +208,34 @@ function giveId2<T>(obj: T): Pick<T, Exclude<keyof T, "id">> & { id: string } {
     id,
   };
 }
+
+// 4-3 unionは嫌だ
+
+interface EventPayloads {
+  start: {
+    user: string;
+  };
+  stop: {
+    user: string;
+    after: number;
+  };
+  end: {};
+}
+
+// 解答
+type Spread<Ev, EvOrig, E> = Ev extends keyof E
+  ? EvOrig[] extends Ev[]
+    ? E[Ev]
+    : never
+  : never;
+
+class EventDischarger2<E> {
+  emit<Ev extends keyof E>(eventName: Ev, payload: Spread<Ev, Ev, E>) {
+    // 省略
+  }
+}
+
+// 型引数Evが"start" | "end"のようなユニオン型か"start"のような単一リテラルか判断したい
+// union distributionを行う必要がある
+// 難しすぎて分からん
+// conditional typeだけ深掘りしても良いかも
